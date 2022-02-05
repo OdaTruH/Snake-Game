@@ -15,6 +15,11 @@ let pommeY = 0;
 // Score
 
 let score = 0;
+// BugDirection
+
+let bugDirection = false;
+// STopGame
+let stopGame = false;
 
 
 let snake = [ {x:140, y:150}, {x:130, y:150}, {x:120, y:150}, {x:110, y:150} ]
@@ -23,19 +28,29 @@ let snake = [ {x:140, y:150}, {x:130, y:150}, {x:120, y:150}, {x:110, y:150} ]
 
 function animation(){
 
-    setTimeout(function(){
+    if(stopGame === true) {
+        return;
 
-        nettoieCanvas();
-        dessinePomme();
+    } else {
 
-        faireAvancerSerpent();
+        setTimeout(function(){
+            bugDirection = false;
+            nettoieCanvas();
+            dessinePomme();
+            faireAvancerSerpent();
+            
+    
+            dessineLeSerpent();
+    
+            //* recursion
+            animation();
+    
+        }, 100);
 
-        dessineLeSerpent();
 
-        //* recursion
-        animation();
+    }
 
-    }, 100);
+    
 }
 
 animation();
@@ -70,6 +85,13 @@ function faireAvancerSerpent() {
 
     const head = {x: snake[0].x + vx, y: snake[0].y + vy};
     snake.unshift(head);
+
+    if(finDuJeu()){
+        snake.shift(head);
+        recommencer();
+        stopGame = true;
+        return;
+    }
     
     const serpentMangePomme = snake[0].x === pommeX && snake[0].y === pommeY;
 
@@ -88,6 +110,10 @@ dessineLeSerpent();
 document.addEventListener('keydown', changerDirection);
 
 function changerDirection(event) {
+
+
+    if(bugDirection) return;
+    bugDirection = true;
     
    const FLECHE_GAUCHE = 37;
    const FLECHE_DROITE = 39;
@@ -141,4 +167,39 @@ function dessinePomme(){
     ctx.fill();
     ctx.stroke();
 
+}
+
+function finDuJeu() {
+
+    let snakeSansTete = snake.slice(1,-1);
+    let mordu = false;
+    snakeSansTete.forEach(morceau => {
+        if(morceau.x === snake[0].x && morceau.y === snake[0].y){
+            mordu = true;
+        }
+    })
+
+    const toucheMurGauche = snake[0].x < -1;
+    const toucheMurDroite = snake[0].x > canvas.widht - 10;
+    const toucheMurTop = snake[0].y < -1;
+    const toucheMurBottom = snake[0].y > canvas.height - 10;
+
+    let gameOver = false;
+
+    if(mordu || toucheMurGauche || toucheMurDroite || toucheMurTop || toucheMurBottom) {
+        gameOver = true;
+    }
+
+    return gameOver;
+}
+
+function recommencer(){
+    const restart = document.getElementById('recommencer');
+    restart.style.display = "block";
+
+    document.addEventListener('keydown', (e) => {
+        if(e.keyCode === 32) {
+            document.location.reload(true);
+        }
+    })
 }
